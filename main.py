@@ -1,13 +1,12 @@
 from fastapi import FastAPI
-
+from engine import TwitterDownloadUrlGetter
 
 app=FastAPI()
-#
-# @app.get('/')
-# async def direct():
-#     return 'Hello World'
+
 
 @app.get('/{id}')
 async def get_url(id):
-    return id
 
+    downloadable_url = TwitterDownloadUrlGetter(id)
+    url=downloadable_url.get_video_url()
+    return {'media_url':url}

@@ -5,13 +5,15 @@ import re
 
 class TwitterDownloadUrlGetter:
 
-    extreme_bearer_token="Bearer AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA"
+
 
     def __init__(self,id):
         self.id=id
         self.video_player_prefix = 'https://twitter.com/i/videos/tweet/'
         self.video_api_url = 'https://api.twitter.com/1.1/videos/tweet/config/'
         self.session=requests.Session()
+        self.extreme_bearer_token="Bearer AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA"
+
 
     def __get_guest_token(self):
         guest_token_url="https://api.twitter.com/1.1/guest/activate.json"
@@ -35,7 +37,57 @@ class TwitterDownloadUrlGetter:
         json_link = "https://api.twitter.com/1.1/statuses/show/" + self.id + ".json?&tweet_mode=extended"
         self.bearer_token=self.__get_bearer_token()
         self.session.headers.update({'Authorization':self.bearer_token})
-        self.get_video_url_json=self.session.get(json_link).json()
+        self.get_video_url_response=self.session.get(json_link)
+        if self.get_video_url_response.status_code==200:
+            self.get_video_url_json=self.get_video_url_response.json()
+            self.downloadable_url=self.url_extracter(self.get_video_url_json)
+            return self.downloadable_url
+
+    def url_extracter(self,json_data):
+        data={'hight_res_url':'','low_res_url':''}
+        try:
+            # url=resp["extended_entities"]["media"][0]["video_info"]["variants"][0]["url"] #this is one video file
+            variants = json_data["extended_entities"]["media"][0]["video_info"]["variants"]
+            print(variants)
+            bitrate = 0
+            chosen_video = ""
+            for i in range(len(variants)):
+                if variants[i]['content_type'] == "application/x-mpegURL": continue
+                # print(variants[i])
+                if variants[i]['bitrate'] > bitrate:
+                    bitrate = variants[i]['bitrate']
+                    chosen_video = variants[i]["url"]
+            return chosen_video
+        except:
+            # print("video url not found..trying extreme method. ")
+
+            new_header = {"Authorization": self.extreme_bearer_token}
+            self.session.headers.update(new_header)
+            json_link = "https://api.twitter.com/1.1/statuses/show/" + self.id + ".json?&tweet_mode=extended"
+            resp2 = self.session.get(json_link).json()
+            variants = resp2["extended_entities"]["media"][0]["video_info"]["variants"]
+            # print(variants)
+            bitrate = 0
+            chosen_video = ""
+            for i in range(len(variants)):
+                if variants[i]['content_type'] == "application/x-mpegURL":
+                    continue
+                elif variants[i]['bitrate'] > bitrate:
+                    bitrate = variants[i]['bitrate']
+                    chosen_video = variants[i]["url"]
+            return chosen_video
+
+if __name__=='__main__':
+    id='1572871541930459136'
+    downloadable_url = TwitterDownloadUrlGetter(id)
+    url = downloadable_url.get_video_url()
+    print(url)
+
+
+
+
+
+
 
 
 

@@ -53,6 +53,9 @@ def getvideo_url(tweet_url):
     s.headers.update(hidir)#++
     # s.headers.update(guest_header)
     json_link = "https://api.twitter.com/1.1/statuses/show/" + tweet_id + ".json?&tweet_mode=extended"
+    # resp = s.get(json_link)
+    # print(resp.status_code)
+
     resp = s.get(json_link).json()
 
     # print(resp)
@@ -137,6 +140,6 @@ tweet_url=tweet_url.strip()
 video=getvideo_url(tweet_url)
 # video="https://video.twimg.com/ext_tw_video/1233302308609495040/pu/vid/512x288/xFnD7-t7O3M1rutG.mp4?tag=10"
 print(video)
-save_video(video)
+# save_video(video)
 input()
 
