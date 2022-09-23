@@ -41,6 +41,7 @@ class TwitterDownloadUrlGetter:
         if self.get_video_url_response.status_code==200:
             self.get_video_url_json=self.get_video_url_response.json()
             self.downloadable_url=self.url_extracter(self.get_video_url_json)
+            self.save_a_txt_file(self.downloadable_url)
             return self.downloadable_url
 
     def url_extracter(self,json_data):
@@ -48,7 +49,7 @@ class TwitterDownloadUrlGetter:
         try:
             # url=resp["extended_entities"]["media"][0]["video_info"]["variants"][0]["url"] #this is one video file
             variants = json_data["extended_entities"]["media"][0]["video_info"]["variants"]
-            print(variants)
+            # print(variants)
             bitrate = 0
             chosen_video = ""
             for i in range(len(variants)):
@@ -77,11 +78,30 @@ class TwitterDownloadUrlGetter:
                     chosen_video = variants[i]["url"]
             return chosen_video
 
+    def save_a_txt_file(self,url):
+
+        with open('url_db.txt',mode='a') as db:
+            db.write(url)
+            db.write('\n')
+            db.close()
+
+    def read_a_txt_file(self):
+        with open('url_db.txt','r') as db:
+            lines =db.readlines()
+            return lines[-4:]
+
+
+
+
+
 if __name__=='__main__':
     id='1572871541930459136'
     downloadable_url = TwitterDownloadUrlGetter(id)
     url = downloadable_url.get_video_url()
-    print(url)
+
+    lines=downloadable_url.read_a_txt_file()
+    print(lines)
+    # print(url)
 
 
 
