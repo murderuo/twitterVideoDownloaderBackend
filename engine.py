@@ -13,6 +13,8 @@ class TwitterDownloadUrlGetter:
         self.video_api_url = 'https://api.twitter.com/1.1/videos/tweet/config/'
         self.session=requests.Session()
         self.extreme_bearer_token="Bearer AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA"
+        # self.data={'video_file':'','latest_videos':[]}
+
 
 
     def __get_guest_token(self):
@@ -38,18 +40,30 @@ class TwitterDownloadUrlGetter:
         self.bearer_token=self.__get_bearer_token()
         self.session.headers.update({'Authorization':self.bearer_token})
         self.get_video_url_response=self.session.get(json_link)
+        # print(self.get_video_url_response.text)
+        will_be_check_json_data=self.get_video_url_response.json()
+        control_result=self.check_data(will_be_check_json_data)
+        if control_result==404: return 404
         if self.get_video_url_response.status_code==200:
             self.get_video_url_json=self.get_video_url_response.json()
             self.downloadable_url=self.url_extracter(self.get_video_url_json)
             self.save_a_txt_file(self.downloadable_url)
             return self.downloadable_url
 
+    def check_data(self,json_data):
+        if "extended_entities" not in json_data: return 404
+
+        if 'media' not in json_data['extended_entities']:return 404
+
+        if 'video_info' not in json_data["extended_entities"]["media"][0]:return 404
+
+
+
+
     def url_extracter(self,json_data):
-        data={'hight_res_url':'','low_res_url':''}
         try:
             # url=resp["extended_entities"]["media"][0]["video_info"]["variants"][0]["url"] #this is one video file
             variants = json_data["extended_entities"]["media"][0]["video_info"]["variants"]
-            # print(variants)
             bitrate = 0
             chosen_video = ""
             for i in range(len(variants)):
@@ -57,7 +71,8 @@ class TwitterDownloadUrlGetter:
                 # print(variants[i])
                 if variants[i]['bitrate'] > bitrate:
                     bitrate = variants[i]['bitrate']
-                    chosen_video = variants[i]["url"]
+                    # self.data['video_file'] = variants[i]["url"]
+                    chosen_video= variants[i]["url"]
             return chosen_video
         except:
             # print("video url not found..trying extreme method. ")
@@ -76,10 +91,10 @@ class TwitterDownloadUrlGetter:
                 elif variants[i]['bitrate'] > bitrate:
                     bitrate = variants[i]['bitrate']
                     chosen_video = variants[i]["url"]
+                    # self.data['video_file'] = variants[i]["url"]
             return chosen_video
 
     def save_a_txt_file(self,url):
-
         with open('url_db.txt',mode='a') as db:
             db.write(url)
             db.write('\n')
@@ -88,20 +103,26 @@ class TwitterDownloadUrlGetter:
     def read_a_txt_file(self):
         with open('url_db.txt','r') as db:
             lines =db.readlines()
+            # self.data['latest_videos']=lines[-4]
             return lines[-4:]
+
+    def latest_videos(self):
+        videos=self.read_a_txt_file()
+        return videos
 
 
 
 
 
 if __name__=='__main__':
-    id='1572871541930459136'
+    # id='1574298110981021697'
+    id='1442369298366967808'
     downloadable_url = TwitterDownloadUrlGetter(id)
     url = downloadable_url.get_video_url()
 
     lines=downloadable_url.read_a_txt_file()
-    print(lines)
-    # print(url)
+    # print(lines)
+    print(url)
 
 
 
