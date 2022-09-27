@@ -11,6 +11,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.get('/')
+async def index():
+    return {'url':'/{id} id section must have twitter video tweet id'}
 
 @app.get('/{id}')
 async def get_url(id):
